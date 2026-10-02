@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Jastip Catalog</title>
+<style>
+:root{--bg:#fff;--ink:#1a1a1a;--mute:#6b6b6b;--line:#e8e8e8;--accent:#e4572e;--tile:#f5f5f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:120px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:12px 14px 8px;border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0 0 8px}
+#q{width:100%;font-size:16px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+#q:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;font:inherit;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{padding:6px 14px 40px;max-width:900px;margin:0 auto}
+section{margin-top:22px}
+h2{font-size:19px;margin:0 0 10px}
+.subs{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;scrollbar-width:none}
+.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.row .card{flex:0 0 140px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.card:focus-visible,.tile:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+.pic{aspect-ratio:1;background:var(--tile);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover}
+.name{font-size:14px;margin:7px 0 2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.price{font-size:15px;font-weight:700}
+.empty{color:var(--mute);padding:30px 0;text-align:center}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:600px){.tiles{grid-template-columns:repeat(5,1fr)}}
+.tile{font:inherit;background:var(--tile);border:0;border-radius:12px;padding:16px 6px;text-align:center;cursor:pointer;color:var(--ink)}
+.tile span{display:block;font-size:34px;margin-bottom:6px}
+.tile b{font-size:14px;font-weight:600}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
+#sheet.on{display:flex}
+.panel{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.carwrap{position:relative}
+.car{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:12px;scrollbar-width:none}
+.car::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:center;height:min(70vw,340px);display:flex;align-items:center;justify-content:center;font-size:90px}
+.slide img{width:100%;height:100%;object-fit:cover}
+.count{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:3px 9px;border-radius:999px}
+.dots{display:flex;justify-content:center;gap:6px;margin:8px 0 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:#ccc}
+.dots i.on{background:var(--accent)}
+.panel h3{margin:12px 0 4px;font-size:20px}
+.panel .price{font-size:22px;color:var(--accent)}
+.tags{color:var(--mute);font-size:13px;margin-top:4px}
+.panel p{color:var(--mute);margin:8px 0 14px;line-height:1.5}
+.btn{display:block;text-align:center;padding:13px;border-radius:10px;font:inherit;font-size:16px;font-weight:600;text-decoration:none;border:0;width:100%;cursor:pointer}
+.wa{background:#25a244;color:#fff;margin-bottom:8px}
+.close{background:var(--tile);color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="shop"></h1>
+  <input id="q" type="search" placeholder="Cari produk..." aria-label="Cari produk" autocomplete="off">
+  <div class="chips" id="top"></div>
+</header>
+<main id="main"></main>
+<div id="sheet" role="dialog" aria-modal="true"><div class="panel" id="panel"></div></div>
+
+<script>
+/* ================= EDIT HERE ================= */
+const SHOP_NAME = "Maru's Jastip Store";
+const WHATSAPP = ""; // contoh: "628123456789" (tanpa + atau spasi). Kosongkan untuk sembunyikan tombol.
+
+// Ikon untuk kategori (opsional). Kategori tanpa ikon pakai 🛍️
+const ICONS = { makeup:"💄", food:"🍜", skincare:"🧴", snack:"🍫" };
+
+// Satu produk = satu baris:
+// Nama | Harga | #kategori #subkategori #rekomendasi | foto1.jpg, foto2.jpg | Deskripsi
+// - Hashtag pertama = kategori utama (otomatis masuk bagian itu)
+// - Hashtag berikutnya = sub-kategori (contoh: #food #chinese)
+// - #rekomendasi = tampil di bagian atas "Rekomendasi"
+// - Foto: nama file (yang kamu upload) atau link. Pisahkan dengan koma. Boleh dikosongkan.
+const DATA = `
+Lipstick Matte Shade 01 | 185000 | #makeup #lipstick #rekomendasi | emoji:💄, emoji:🎀, emoji:✨ | Contoh deskripsi produk.
+Cushion Foundation | 240000 | #makeup #face | emoji:🧴, emoji:🪞 | Contoh deskripsi produk.
+Eyeshadow Palette 9 Warna | 210000 | #makeup #eyes #rekomendasi | emoji:🎨, emoji:👁️ | Contoh deskripsi produk.
+Mascara Waterproof | 120000 | #makeup #eyes | emoji:👁️ | Contoh deskripsi produk.
+Choco Pie Isi 12 | 65000 | #food #snack #rekomendasi | emoji:🍫, emoji:🍪 | Contoh deskripsi produk.
+Matcha KitKat Box | 90000 | #food #snack #japanese | emoji:🍵 | Contoh deskripsi produk.
+Instant Ramen Pack 5 | 80000 | #food #noodles #japanese | emoji:🍜, emoji:🥢 | Contoh deskripsi produk.
+Mie Instan Pedas Cina | 70000 | #food #noodles #chinese | emoji:🌶️, emoji:🥡 | Contoh deskripsi produk.
+Dumpling Frozen Isi 20 | 110000 | #food #chinese | emoji:🥟 | Contoh deskripsi produk.
+Sunscreen SPF50 | 150000 | #skincare #sun #rekomendasi | emoji:☀️, emoji:🧴 | Contoh deskripsi produk.
+Sheet Mask Isi 10 | 99000 | #skincare #mask | emoji:🧖 | Contoh deskripsi produk.
+`;
+/* ============================================= */
+
+const rp = n => "Rp " + Number(n).toLocaleString("id-ID");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const label = t => t.replace(/[-_]/g, " ").replace(/^./, c => c.toUpperCase());
+const BG = ["#fdecea","#e8f4fd","#fff6e0","#eaf7ec","#f3eafd"];
+
+const P = DATA.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("//")).map((l, i) => {
+  const [name, price, tags, photos, desc] = l.split("|").map(s => (s || "").trim());
+  const tg = ((tags || "").toLowerCase().match(/#[^\s#]+/g) || []).map(t => t.slice(1));
+  const rest = tg.filter(t => t !== "rekomendasi");
+  return { i, name, price: parseInt(String(price).replace(/\D/g, "")) || 0, rec: tg.includes("rekomendasi"),
+    cat: rest[0] || "lainnya", subs: rest.slice(1), photos: (photos || "").split(",").map(s => s.trim()).filter(Boolean), desc };
+});
+const cats = [...new Set(P.map(p => p.cat))];
+let cat = "", sub = "", term = "";
+
+const slide = (ph, n) => ph.startsWith("emoji:") ? ph.slice(6) : `<img src="${esc(ph)}" alt="" loading="lazy">`;
+const thumb = p => `<div class="pic">${p.photos.length ? slide(p.photos[0]) : "🛍️"}</div>`;
+const card = p => `<button class="card" data-i="${p.i}">${thumb(p)}<div class="name">${esc(p.name)}</div><div class="price">${rp(p.price)}</div></button>`;
+const chip = (k, v, text, on) => `<button class="chip${on ? " on" : ""}" data-k="${k}" data-v="${esc(v)}">${esc(text)}</button>`;
+
+function render() {
+  document.getElementById("top").innerHTML = chip("cat", "", "Semua", !cat) + cats.map(c => chip("cat", c, label(c), cat === c)).join("");
+  let h = "";
+  if (term) {
+    const t = term.toLowerCase();
+    const hits = P.filter(p => (p.name + " " + p.cat + " " + p.subs.join(" ")).toLowerCase().includes(t));
+    h = hits.length ? `<section><h2>Hasil pencarian</h2><div class="grid">${hits.map(card).join("")}</div></section>` : `<div class="empty">Tidak ada produk untuk "${esc(term)}".</div>`;
+  } else {
+    if (cat) {
+      const inCat = P.filter(p => p.cat === cat);
+      const subs = [...new Set(inCat.flatMap(p => p.subs))];
+      h += `<section><h2>${ICONS[cat] || "🛍️"} ${esc(label(cat))}</h2>`;
+      if (subs.length) h += `<div class="subs">${chip("sub", "", "Semua", !sub)}${subs.map(s => chip("sub", s, label(s), sub === s)).join("")}</div>`;
+      h += `<div class="grid">${inCat.filter(p => !sub || p.subs.includes(sub)).map(card).join("")}</div></section>`;
+    } else {
+      const recs = P.filter(p => p.rec);
+      if (recs.length) h += `<section><h2>Rekomendasi</h2><div class="row">${recs.map(card).join("")}</div></section>`;
+      cats.forEach(c => { h += `<section><h2>${esc(label(c))}</h2><div class="grid">${P.filter(p => p.cat === c).map(card).join("")}</div></section>`; });
+    }
+    h += `<section><h2>Cari berdasarkan kategori</h2><div class="tiles">${cats.map(c => `<button class="tile" data-k="cat" data-v="${esc(c)}"><span>${ICONS[c] || "🛍️"}</span><b>${esc(label(c))}</b></button>`).join("")}</div></section>`;
+  }
+  document.getElementById("main").innerHTML = h;
+}
+
+document.addEventListener("click", e => {
+  const k = e.target.closest("[data-k]");
+  if (k) {
+    if (k.dataset.k === "cat") { cat = k.dataset.v; sub = ""; } else { sub = k.dataset.v; }
+    term = ""; document.getElementById("q").value = ""; render(); window.scrollTo({ top: 0 }); return;
+  }
+  const c = e.target.closest(".card");
+  if (c) openSheet(P[c.dataset.i]);
+});
+document.getElementById("q").addEventListener("input", e => { term = e.target.value.trim(); render(); });
+
+const sheet = document.getElementById("sheet"), panel = document.getElementById("panel");
+function openSheet(p) {
+  const n = p.photos.length || 1;
+  const slides = p.photos.length ? p.photos.map((ph, j) => `<div class="slide" style="background:${BG[j % BG.length]}">${slide(ph)}</div>`).join("") : `<div class="slide" style="background:${BG[0]}">🛍️</div>`;
+  const msg = encodeURIComponent("Halo, saya mau tanya jastip: " + p.name + " (" + rp(p.price) + ")");
+  panel.innerHTML = `<div class="carwrap"><div class="car" id="car">${slides}</div>${n > 1 ? `<div class="count" id="cnt">1/${n}</div>` : ""}</div>` +
+    (n > 1 ? `<div class="dots" id="dots">${"<i></i>".repeat(n)}</div>` : "") +
+    `<h3>${esc(p.name)}</h3><div class="price">${rp(p.price)}</div><div class="tags">${[p.cat, ...p.subs].map(t => "#" + esc(t)).join(" ")}</div><p>${esc(p.desc || "")}</p>` +
+    (WHATSAPP ? `<a class="btn wa" href="https://wa.me/${WHATSAPP}?text=${msg}" target="_blank" rel="noopener">Tanya / Pesan via WhatsApp</a>` : "") +
+    `<button class="btn close" id="x">Tutup</button>`;
+  const car = document.getElementById("car"), dots = document.querySelectorAll("#dots i"), cnt = document.getElementById("cnt");
+  const mark = () => { const j = Math.round(car.scrollLeft / car.clientWidth); dots.forEach((d, x) => d.classList.toggle("on", x === j)); if (cnt) cnt.textContent = (j + 1) + "/" + n; };
+  car.addEventListener("scroll", mark); mark();
+  sheet.classList.add("on"); document.getElementById("x").focus();
+}
+sheet.addEventListener("click", e => { if (e.target === sheet || e.target.id === "x") sheet.classList.remove("on"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") sheet.classList.remove("on"); });
+
+document.getElementById("shop").textContent = SHOP_NAME;
+document.title = SHOP_NAME;
+render();
+</script>
+</body>
+</html>
